@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kumbung Jamur | Ahmad Fauzan Eka Wardani &amp; Roby Ahmad Firdaus</title>
+<!-- Firebase SDK v8 Compat -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="m" viewBox="0 0 120 140">
+    <path d="M8 72 C8 30 34 6 60 6 C86 6 112 30 112 72 Z"/>
+    <path d="M46 72 H74 C74 96 79 116 86 132 H34 C41 116 46 96 46 72 Z"/>
+    <circle cx="38" cy="42" r="7" fill="var(--humus)" fill-opacity=".55"/>
+    <circle cx="66" cy="26" r="5" fill="var(--humus)" fill-opacity=".55"/>
+    <circle cx="86" cy="50" r="8" fill="var(--humus)" fill-opacity=".55"/>
+  </symbol>
+</svg>
+
+<div class="bg" aria-hidden="true">
+  <svg style="left:62%;top:4%;width:150px;--r:12deg;--o:.05"><use href="#m"/></svg>
+  <svg style="left:88%;top:34%;width:200px;--r:18deg;--o:.05"><use href="#m"/></svg>
+  <svg style="left:30%;top:58%;width:130px;--r:-10deg;--o:.04"><use href="#m"/></svg>
+  <svg style="left:74%;top:78%;width:180px;--r:-14deg;--o:.05"><use href="#m"/></svg>
+</div>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 120 140"><use href="#m"/></svg>
+      <div><b>Kumbung Jamur</b><span class="lbl">IoT Monitoring</span></div>
+    </div>
+    <div class="conn" id="connStatus"><span class="dot"></span><span id="connText">Menghubungkan…</span></div>
+    <nav class="nav" aria-label="Pilih dasbor">
+      <a href="#monitoring" id="tab-monitoring">Monitoring &amp; Kendali Cepat</a>
+      <a href="#data" id="tab-data">Data Sensor</a>
+      <a href="#pengaturan" id="tab-pengaturan">Pengaturan Setpoint</a>
+    </nav>
+    <div class="team">
+      <span class="lbl">Disusun oleh</span>
+      <div><b>Ahmad Fauzan Eka Wardani</b><span>244101070117</span></div>
+      <div><b>Roby Ahmad Firdaus</b><span>244101070006</span></div>
+    </div>
+    <div class="tele"><div><span class="lbl">Telemetri aktif</span><div class="tele-val">Kirim tiap 3 detik</div></div><span class="live">Live</span></div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="top-left">
+        <label class="chamber"><span class="lbl">Jenis jamur</span><select id="jenisJamur"></select></label>
+        <div class="chamber" data-view="monitoring">
+          <span class="lbl">Fase</span>
+          <div class="seg" id="faseSeg" role="group" aria-label="Fase tumbuh">
+            <button type="button" data-fase="inkubasi">INKUBASI</button>
+            <button type="button" data-fase="tumbuh">TUBUH BUAH</button>
+          </div>
+        </div>
+      </div>
+      <div class="clock" id="jamWib">--:--:-- WIB</div>
+    </header>
+
+    <section class="hero">
+      <div class="chips">
+        <span class="chip g">● Kumbung A</span>
+        <span class="chip" id="chipFase">Fase: --</span>
+        <span class="chip" id="chipJamur">Jamur: --</span>
+        <span class="chip" id="chipMode">Mode: --</span>
+      </div>
+      <div class="hero-row">
+        <div><h1 id="judul"></h1><p id="deskripsi"></p></div>
+        <div class="actions" data-view="monitoring">
+          <button class="ghost" type="button" onclick="gotoLog()">Log kejadian</button>
+          <button class="danger" type="button" onclick="darurat()">Emergency override</button>
+        </div>
+        <div class="actions" data-view="pengaturan" hidden>
+          <button class="ghost" type="button" onclick="resetDefault()">Reset ke default</button>
+          <button class="primary" type="button" id="saveBtn" onclick="simpanPengaturan()" disabled>Simpan pengaturan</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASBOR 1: MONITORING -->
+    <div class="view" id="view-monitoring">
+      <div class="kpis">
+        <article class="kpi">
+          <span class="lbl">Ruangan // Suhu udara</span>
+          <div class="kv" id="suhuVal">--</div>
+          <div class="kmeta" id="suhuMeta">Menunggu data…</div>
+          <div class="krow"><span id="suhuTarget">Target: --</span><b class="badge" id="suhuBadge">--</b></div>
+          <svg id="spSuhu" class="spark s-g" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </article>
+        <article class="kpi">
+          <span class="lbl">Ruangan // Kelembapan (RH)</span>
+          <div class="kv" id="lembabVal">--</div>
+          <div class="kmeta" id="lembabMeta">Menunggu data…</div>
+          <div class="krow"><span id="lembabTarget">Target: --</span><b class="badge" id="lembabBadge">--</b></div>
+          <svg id="spLembab" class="spark s-c" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </article>
+        <article class="kpi">
+          <span class="lbl">Aktuator // Sanyo (relay 1)</span>
+          <div class="kv sm" id="pompaVal">--</div>
+          <div class="kmeta">Status terakhir dari alat</div>
+          <div class="krow"><span>Status</span><b class="badge" id="statusPompa">Menunggu...</b></div>
+        </article>
+        <article class="kpi">
+          <span class="lbl">Kontrol // Mode</span>
+          <div class="kv sm" id="modeVal">--</div>
+          <div class="kmeta" id="modeMeta">--</div>
+        </article>
+      </div>
+
+      <div class="cols">
+        <section class="panel">
+          <span class="lbl">Hardware relay interface</span>
+          <h2>Kendali cepat aktuator</h2>
+          <div class="switch-row">
+            <div><strong>Sistem otomatis</strong><small>Sanyo menyala otomatis sesuai batas kelembapan</small></div>
+            <label class="switch"><input type="checkbox" id="autoToggle" onchange="updateFirebase('auto')" aria-label="Sistem otomatis"><span class="slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div><strong>Sanyo manual (relay 1)</strong><small>Hanya aktif jika sistem otomatis mati</small></div>
+            <label class="switch"><input type="checkbox" id="manualToggle" onchange="updateFirebase('manual')" aria-label="Sanyo manual"><span class="slider"></span></label>
+          </div>
+        </section>
+        <section class="panel" id="logPanel">
+          <span class="lbl">Audit trail otomatisasi</span>
+          <h2>Log kejadian terkini</h2>
+          <ul class="log" id="logList"></ul>
+        </section>
+      </div>
+    </div>
+
+    <!-- DASBOR 2: DATA -->
+    <div class="view" id="view-data" hidden>
+      <div class="dgrid">
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="lbl">Histori analitik mikroklimat</span><h2>Tren suhu dan kelembapan</h2></div>
+            <div class="seg" id="rangeSeg" role="group" aria-label="Rentang waktu">
+              <button type="button" data-ms="60000">1 MNT</button>
+              <button type="button" data-ms="180000" class="active">3 MNT</button>
+              <button type="button" data-ms="600000">10 MNT</button>
+              <button type="button" data-ms="0">SEMUA</button>
+            </div>
+          </div>
+          <div class="chart-grid">
+            <figure class="chart-card">
+              <figcaption><span>Suhu (°C)</span><span class="stat" id="statSuhu">Menunggu data…</span></figcaption>
+              <svg id="chartSuhu" class="chart suhu" viewBox="0 0 600 220" role="img" aria-label="Grafik suhu"></svg>
+            </figure>
+            <figure class="chart-card">
+              <figcaption><span>Kelembapan (%)</span><span class="stat" id="statLembab">Menunggu data…</span></figcaption>
+              <svg id="chartLembab" class="chart lembab" viewBox="0 0 600 220" role="img" aria-label="Grafik kelembapan"></svg>
+            </figure>
+          </div>
+          <p class="note">Garis putus-putus adalah batas dari dasbor Pengaturan. Data terkumpul selama halaman terbuka (maksimal 600 titik, sekitar 30 menit).</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div><span class="lbl">Hasil pembacaan sensor DHT22</span><h2>Tabel data sensor</h2></div>
+            <button class="ghost" type="button" onclick="unduhCSV()">Unduh CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>No</th><th>Waktu</th><th>Suhu (°C)</th><th>Kelembapan (%)</th><th>Status pompa</th></tr></thead>
+              <tbody id="dataBody"><tr><td colspan="5" class="empty">Menunggu data…</td></tr></tbody>
+            </table>
+          </div>
+          <p class="note">Menampilkan 100 baris terakhir, yang terbaru di atas. File CSV berisi seluruh data yang terkumpul.</p>
+        </section>
+      </div>
+    </div>
+
+    <!-- DASBOR 3: PENGATURAN -->
+    <div class="view" id="view-pengaturan" hidden>
+      <section class="panel strip">
+        <div>
+          <span class="lbl">Setpoint aktif tersimpan</span>
+          <div class="strip-val">RH di bawah <b id="activeLembab">-- %</b> &nbsp;|&nbsp; Suhu maksimum <b id="activeSuhu">-- °C</b></div>
+        </div>
+        <div class="msg" id="saveMsg" role="status"></div>
+      </section>
+
+      <div class="sets">
+        <section class="panel">
+          <span class="lbl">Sensor cluster // suhu udara</span>
+          <h2>Batas suhu maksimum</h2>
+          <div class="field-row">
+            <button class="step" type="button" data-target="setSuhu" data-step="-0.5" aria-label="Kurangi suhu">−</button>
+            <div class="field-val" id="setSuhuVal">30.0 °C</div>
+            <button class="step" type="button" data-target="setSuhu" data-step="0.5" aria-label="Tambah suhu">+</button>
+          </div>
+          <input type="range" id="setSuhu" min="10" max="40" step="0.5" value="30" aria-label="Batas suhu maksimum">
+          <p class="hintx">Suhu tertinggi yang diinginkan di dalam kumbung (rentang 10–40 °C).</p>
+        </section>
+        <section class="panel">
+          <span class="lbl">Humidity control loop</span>
+          <h2>Batas kelembapan minimum</h2>
+          <div class="field-row">
+            <button class="step" type="button" data-target="setLembab" data-step="-1" aria-label="Kurangi kelembapan">−</button>
+            <div class="field-val" id="setLembabVal">80 %</div>
+            <button class="step" type="button" data-target="setLembab" data-step="1" aria-label="Tambah kelembapan">+</button>
+          </div>
+          <input type="range" id="setLembab" min="40" max="100" step="1" value="80" aria-label="Batas kelembapan minimum">
+          <p class="hintx">Sanyo menyala (mode otomatis) saat kelembapan di bawah angka ini (rentang 40–100 %).</p>
+        </section>
+      </div>
+
+      <section class="panel">
+        <span class="lbl">Katalog preset spesies</span>
+        <h2>Acuan kelembapan dan suhu per jenis jamur</h2>
+        <p class="hintx" style="margin:-8px 0 16px">Tombol “Pakai” mengisi batas kelembapan dengan angka minimum fase itu dan batas suhu dengan angka maksimumnya. Setelah itu tekan Simpan.</p>
+        <div class="jamur-grid" id="jamurList"></div>
+        <p class="note">Angka di atas adalah acuan umum. Kebutuhan bisa berbeda tergantung strain bibit, media tanam, dan kondisi kumbung.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
