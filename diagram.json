@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "author": "Uri Shaked",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -143.7, "left": 196.2, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 192.2, "left": 153.6, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 169.2,
+      "left": 339.8,
+      "attrs": { "color": "cyan" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 4.8,
+      "left": 191.45,
+      "rotate": 90,
+      "attrs": { "value": "1000" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 169.2,
+      "left": 301.4,
+      "attrs": { "color": "magenta" }
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled1",
+      "top": 89.54,
+      "left": 269.03,
+      "attrs": { "i2cAddress": "0x3c" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:GND.3", "dht1:GND", "black", [ "h0" ] ],
+    [ "dht1:SDA", "r1:1", "yellow", [ "v0" ] ],
+    [ "dht1:VCC", "r1:2", "red", [ "v0" ] ],
+    [ "esp:3V3", "r1:2", "red", [ "h-14.21", "v-48", "h201.6", "v76.8" ] ],
+    [ "relay1:VCC", "r1:2", "red", [ "h-9.6", "v-86.4" ] ],
+    [ "esp:4", "r1:1", "yellow", [ "h62.44", "v-48", "h67.2", "v-86.4" ] ],
+    [ "esp:5", "relay1:IN", "green", [ "h33.64", "v96" ] ],
+    [ "relay1:GND", "esp:GND.3", "black", [ "h-38.4", "v-125.2" ] ],
+    [ "oled1:GND", "esp:GND.3", "black", [ "v-28.8", "h-57.6", "v48" ] ],
+    [ "oled1:VCC", "relay1:VCC", "red", [ "v-19.2", "h-57.45", "v86.4", "h-105.6" ] ],
+    [ "oled1:SDA", "esp:21", "blue", [ "v-38.4", "h-201.53", "v19.2" ] ],
+    [ "esp:22", "oled1:SCL", "violet", [ "h0" ] ],
+    [ "relay1:COM", "esp:GND.1", "black", [ "h20.4", "v37", "h-297.6", "v-76.8" ] ],
+    [ "led1:C", "relay1:NO", "cyan", [ "v0" ] ],
+    [ "led2:A", "led1:A", "red", [ "v9.6", "h38.4", "v-9.6" ] ],
+    [ "led2:C", "relay1:NC", "magenta", [ "v0" ] ],
+    [ "led1:A", "relay1:VCC", "red", [ "v57.6", "h-220.8", "v-67.2" ] ]
+  ],
+  "dependencies": {}
+}
